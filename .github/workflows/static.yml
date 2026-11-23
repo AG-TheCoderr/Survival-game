@@ -5,13 +5,9 @@ on:
     branches: [ main ]
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -19,14 +15,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: setup pages
-        uses: actions/configure-pages@v5
-
-      - name: upload artifact
-        uses: actions/upload-pages-artifact@v4
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: '.'
-
-      - name: deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
