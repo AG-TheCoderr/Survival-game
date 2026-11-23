@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Survival Game</title>
+<style>
+html,body{margin:0;overflow:hidden;background:#111;}
+canvas{display:block;image-rendering:pixelated;width:100vw;height:100vh;}
+</style>
+</head>
+<body>
+<script type="importmap">
+{
+  "imports": { "three": "./lib/three.module.js" }
+}
+</script>
+<script type="module">
+import * as THREE from './lib/three.module.js';
+
+// --- seeded value noise ---
+const perm = [];
+for (let i = 0; i < 256; i++) perm[i] = i;
+for (let i = 255; i > 0; i--) {
+  const j = Math.floor(Math.random() * (i + 1));
+  [perm[i], perm[j]] = [perm[j], perm[i]];
+}
+const p = new Uint8Array(512);
+for (let i = 0; i < 512; i++) p[i] = perm[i & 255];
+function fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function grad(h, x, y, z) {
+  const g = h & 15;
+  const u = g < 8 ? x : y;
+  const v = g < 4 ? y : (g === 12 || g === 14) ? x : z;
+  return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v);
+}
+function noise(x, y, z) {
+  const X = Math.floor(x) & 255, Y = Math.floor(y) & 255, Z = Math.floor(z) & 255;
+  x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
+  const u = fade(x), v = fade(y), w = fade(z);
+  const a = p[X] + Y, b = p[X + 1] + Y;
+  const aa = p[a] + Z, ab = p[a + 1] + Z;
+  const ba = p[b] + Z, bb = p[b + 1] + Z;
+  return lerp(
+    lerp(lerp(grad(p[aa], x, y, z), grad(p[ba], x - 1, y, z), u),
+         lerp(grad(p[ab], x, y - 1, z), grad(p[bb], x - 1, y - 1, z), u), v),
+    lerp(lerp(grad(p[aa + 1], x, y, z - 1), grad(p[ba + 1], x - 1, y, z - 1), u),
+         lerp(grad(p[ab + 1], x, y - 1, z - 1), grad(p[bb + 1], x - 1, y - 1, z - 1), u), v), w
+  );
+}
+
+// --- scene ---
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x4a8ccb);
+scene.fog = new THREE.Fog(0x4a8ccb, 14, 44);
+
+const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 80);
+camera.position.set(24, 26, 24);
+const look = new THREE.Vector3(24, 0, 24);
+
+const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+renderer.setPixelRatio(1);
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambient);
+const sun = new THREE.DirectionalLight(0xffffff, 1);
+sun.position.set(20, 40, 10);
+scene.add(sun);
+
+// --- pixelated noise ground ---
+const size = 48;
+const geometry = new THREE.BoxGeometry(1, 1, 1);
+geometry.deleteAttribute('normal');
+geometry.deleteAttribute('uv');
+
+const color = new THREE.Color();
+const hColor = (h) => {
+  if (h < 0.30) return color.setHex(0x114488);   // deep water
+  if (h < 0.36) return color.setHex(0x2a6fb5);   // shallow water
+  if (h < 0.44) return color.setHex(0xc2b280);   // sand
+  if (h < 0.72) return color.setHex(0x5a9e5a);   // grass
+  if (h < 0.86) return color.setHex(0x7a7a7a);   // rock
+  return color.setHex(0xdddddd);                 // snow
+};
+
+const material = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true });
+const mesh = new THREE.InstancedMesh(geometry, material, size * size);
+mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+const dummy = new THREE.Object3D();
+
+let idx = 0;
+for (let z = 0; z < size; z++) {
+  for (let x = 0; x < size; x++) {
+    const h = 0.35 + 0.30 * noise(x * 0.25, 0, z * 0.25)
+                 + 0.15 * noise(x * 0.9, 0, z * 0.9);
+    const hh = Math.max(0.02, h);
+    dummy.position.set(x - size / 2, hh * 8 / 2, z - size / 2);
+    dummy.scale.set(1, hh * 8, 1);
+    dummy.updateMatrix();
+    mesh.setMatrixAt(idx, dummy.matrix);
+    mesh.setColorAt(idx, hColor(hh));
+    idx++;
+  }
+}
+mesh.instanceMatrix.needsUpdate = true;
+mesh.instanceColor.needsUpdate = true;
+scene.add(mesh);
+
+camera.lookAt(look);
+
+// --- controls ---
+const keys = {};
+addEventListener('keydown', (e) => { keys[e.code] = true; });
+addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+function updateCamera() {
+  const sp = 0.15;
+  if (keys['KeyW']) look.z -= sp;
+  if (keys['KeyS']) look.z += sp;
+  if (keys['KeyA']) look.x -= sp;
+  if (keys['KeyD']) look.x += sp;
+  camera.position.set(look.x, look.y + 22, look.z + 22);
+  camera.lookAt(look);
+}
+
+// --- loop ---
+function animate() {
+  requestAnimationFrame(animate);
+  updateCamera();
+  renderer.render(scene, camera);
+}
+animate();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
