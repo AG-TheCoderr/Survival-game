@@ -1,0 +1,35 @@
+name: deploy static
+
+on:
+  push:
+    branches: [ arena/112c4181-survival-game, main ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup pages
+        uses: actions/configure-pages@v5
+
+      - name: upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
