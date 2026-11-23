@@ -2,7 +2,7 @@ name: deploy static
 
 on:
   push:
-    branches: [ arena/112c4181-survival-game, main ]
+    branches: [ main ]
 
 permissions:
   contents: read
