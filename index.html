@@ -55,20 +55,16 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x4a8ccb);
 scene.fog = new THREE.Fog(0x4a8ccb, 14, 44);
 
-const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 80);
-camera.position.set(24, 26, 24);
-const look = new THREE.Vector3(24, 0, 24);
+const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 30, 30);
+const look = new THREE.Vector3(0, 0, 0);
 
 const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
 renderer.setPixelRatio(1);
 renderer.setSize(innerWidth, innerHeight);
 document.body.appendChild(renderer.domElement);
 
-const ambient = new THREE.AmbientLight(0xffffff, 0.5);
-scene.add(ambient);
-const sun = new THREE.DirectionalLight(0xffffff, 1);
-sun.position.set(20, 40, 10);
-scene.add(sun);
+
 
 // --- pixelated noise ground ---
 const size = 48;
@@ -86,7 +82,7 @@ const hColor = (h) => {
   return color.setHex(0xdddddd);                 // snow
 };
 
-const material = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true });
+const material = new THREE.MeshBasicMaterial({ vertexColors: true });
 const mesh = new THREE.InstancedMesh(geometry, material, size * size);
 mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 const dummy = new THREE.Object3D();
