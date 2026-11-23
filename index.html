@@ -12,11 +12,13 @@ canvas{display:block;image-rendering:pixelated;width:100vw;height:100vh;}
 <body>
 <script type="importmap">
 {
-  "imports": { "three": "./lib/three.module.js" }
+  "imports": { "three": "./lib/three.js" }
 }
 </script>
 <script type="module">
-import * as THREE from './lib/three.module.js';
+import * as THREE from './lib/three.js';
+
+try {
 
 // --- seeded value noise ---
 const perm = [];
@@ -137,6 +139,10 @@ addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
 });
+
+} catch (e) {
+  document.body.innerHTML = '<div style="color:red;font-family:monospace;padding:20px">JS Error: ' + e.message + '</div>';
+}
 </script>
 </body>
 </html>
