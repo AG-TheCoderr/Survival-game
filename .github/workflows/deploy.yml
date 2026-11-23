@@ -5,27 +5,20 @@ on:
     branches: [ main ]
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: setup pages
-        uses: actions/configure-pages@v5
-
-      - name: upload artifact
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: '.'
-
-      - name: deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Deploy to gh-pages
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git checkout -B gh-pages
+          git rm -rf --cached . 2>/dev/null || true
+          git add index.html lib/ README.md
+          git commit -m "Deploy to GitHub Pages"
+          git push origin gh-pages --force
