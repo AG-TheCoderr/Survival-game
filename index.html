@@ -64,25 +64,27 @@ renderer.setPixelRatio(1);
 renderer.setSize(innerWidth, innerHeight);
 document.body.appendChild(renderer.domElement);
 
-
+const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+scene.add(ambient);
+const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+sun.position.set(20, 40, 10);
+scene.add(sun);
 
 // --- pixelated noise ground ---
 const size = 48;
 const geometry = new THREE.BoxGeometry(1, 1, 1);
-geometry.deleteAttribute('normal');
-geometry.deleteAttribute('uv');
 
 const color = new THREE.Color();
 const hColor = (h) => {
-  if (h < 0.30) return color.setHex(0x114488);   // deep water
-  if (h < 0.36) return color.setHex(0x2a6fb5);   // shallow water
-  if (h < 0.44) return color.setHex(0xc2b280);   // sand
-  if (h < 0.72) return color.setHex(0x5a9e5a);   // grass
-  if (h < 0.86) return color.setHex(0x7a7a7a);   // rock
-  return color.setHex(0xdddddd);                 // snow
+  if (h < 0.30) return color.setHex(0x114488);
+  if (h < 0.36) return color.setHex(0x2a6fb5);
+  if (h < 0.44) return color.setHex(0xc2b280);
+  if (h < 0.72) return color.setHex(0x5a9e5a);
+  if (h < 0.86) return color.setHex(0x7a7a7a);
+  return color.setHex(0xdddddd);
 };
 
-const material = new THREE.MeshBasicMaterial({ vertexColors: true });
+const material = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true });
 const mesh = new THREE.InstancedMesh(geometry, material, size * size);
 mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 const dummy = new THREE.Object3D();
