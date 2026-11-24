@@ -56,9 +56,9 @@ function noise(x, y, z) {
 // --- scene ---
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x4a8ccb);
-scene.fog = new THREE.Fog(0x4a8ccb, 14, 44);
+scene.fog = new THREE.Fog(0x4a8ccb, 40, 110);
 
-const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 100);
+const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 200);
 camera.position.set(0, 30, 30);
 const look = new THREE.Vector3(0, 0, 0);
 
@@ -123,7 +123,7 @@ function updateCamera() {
   if (keys['KeyS']) look.z += sp;
   if (keys['KeyA']) look.x -= sp;
   if (keys['KeyD']) look.x += sp;
-  camera.position.set(look.x, look.y + 22, look.z + 22);
+  camera.position.set(look.x, look.y + 30, look.z + 30);
   camera.lookAt(look);
 }
 
